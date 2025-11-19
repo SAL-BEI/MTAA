@@ -86,7 +86,7 @@ class WelcomeScreen : Screen {
                 Button(
                     onClick = {
                         // Navigate to Onboarding
-                        navigator.push(SellerOnboardingScreen())
+                        navigator.push(SignUpScreen())
                     },
                     modifier = Modifier
                         .fillMaxWidth()

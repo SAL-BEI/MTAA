@@ -28,6 +28,7 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
+            implementation(libs.ktor.client.okhttp)
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
