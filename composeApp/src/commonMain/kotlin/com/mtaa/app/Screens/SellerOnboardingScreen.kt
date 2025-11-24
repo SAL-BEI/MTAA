@@ -100,15 +100,12 @@ class SellerOnboardingScreen : Screen {
             // 4. Next Button (Sticks to bottom)
             Button(
                 onClick = {
-                    scope.launch {
-                        isLoading = true
-                        // For now, we just simulate a delay because we aren't logged in yet
-                        // In the real app, we will call repository.createBusiness(businessName, kraPin)
-                        kotlinx.coroutines.delay(1000)
+                    scope.launch {val success = repository.createBusiness(businessName, kraPin)
                         isLoading = false
 
-                        // Move to next step (We will build Step 2 next)
-                        println("Moving to Step 2 with: $businessName")
+                        if (success) {
+                            navigator.push(DocumentUploadScreen())
+                        }
                     }
                 },
                 enabled = businessName.isNotEmpty() && kraPin.isNotEmpty() && !isLoading,

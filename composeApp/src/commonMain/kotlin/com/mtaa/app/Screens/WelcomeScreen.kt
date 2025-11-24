@@ -85,17 +85,25 @@ class WelcomeScreen : Screen {
                 // Button
                 Button(
                     onClick = {
-                        // Navigate to Onboarding
-                        navigator.push(SignUpScreen())
+                        navigator.push(SignUpScreen()) // Go to Sign Up
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MtaaOrange),
                     shape = RoundedCornerShape(16.dp),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                 ) {
                     Text("List My Business", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+// 2. The "I already have an account" Button (Separate Composable)
+                TextButton(
+                    onClick = {
+                        navigator.push(LoginScreen()) // Go to Login
+                    }
+                ) {
+                    Text("I already have an account", color = MtaaSlate)
                 }
             }
         }
