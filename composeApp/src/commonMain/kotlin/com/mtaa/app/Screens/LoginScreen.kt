@@ -5,6 +5,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
@@ -29,8 +33,10 @@ class LoginScreen : Screen {
         val scope = rememberCoroutineScope()
         val authRepo = remember { AuthRepository() }
 
+        // State Variables (Defined at the top)
         var email by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
+        var passwordVisible by remember { mutableStateOf(false) }
         var isLoading by remember { mutableStateOf(false) }
         var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -55,7 +61,7 @@ class LoginScreen : Screen {
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Email
+                // Email Input
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -72,19 +78,28 @@ class LoginScreen : Screen {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Password
+                // Password Input (With Eye Button)
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     label = { Text("Password") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MtaaOrange,
                         focusedLabelColor = MtaaOrange,
                         cursorColor = MtaaOrange
-                    )
+                    ),
+                    trailingIcon = {
+                        val image = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                        val description = if (passwordVisible) "Hide password" else "Show password"
+
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(imageVector = image, contentDescription = description)
+                        }
+                    }
                 )
 
                 if (errorMessage != null) {
@@ -97,21 +112,28 @@ class LoginScreen : Screen {
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Login Button
+                // Login Button (With Smart Navigation Logic)
                 Button(
                     onClick = {
                         scope.launch {
                             isLoading = true
                             errorMessage = null
                             val success = authRepo.signIn(email, password)
-                            isLoading = false
+
                             if (success) {
-                                // Success! Navigate to Business Info (or Dashboard later)
-                                navigator.push(SellerOnboardingScreen())
+                                // CHECK: Does this user have a shop?
+                                val hasShop = authRepo.hasBusiness()
+                                isLoading = false // Stop loading before navigating
+
+                                if (hasShop) {
+                                    navigator.push(SellerDashboardScreen())
+                                } else {
+                                    navigator.push(SellerOnboardingScreen())
+                                }
                             } else {
+                                isLoading = false
                                 errorMessage = "Login failed. Check email/password."
                             }
-
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
