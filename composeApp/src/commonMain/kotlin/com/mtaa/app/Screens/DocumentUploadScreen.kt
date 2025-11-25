@@ -122,7 +122,8 @@ class DocumentUploadScreen : Screen {
                             isLoading = false
                             if (success) {
                                 // Success! In next step we will build Location Map
-                                println("Document Uploaded!")
+                                // Navigate to Step 3
+                                navigator.push(LocationVerificationScreen())
                             }
                         }
                     }
