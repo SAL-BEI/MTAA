@@ -1,26 +1,23 @@
 package com.mtaa.app.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.mtaa.app.MtaaMap // Import our new Map component
 import com.mtaa.app.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -31,37 +28,30 @@ class LocationVerificationScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
 
-        // Mock State
         var isVerifying by remember { mutableStateOf(false) }
         var isVerified by remember { mutableStateOf(false) }
-        var statusMessage by remember { mutableStateOf("Stand inside your shop and click Verify.") }
+        var statusMessage by remember { mutableStateOf("Pin your exact shop location.") }
+
+        // Store the selected coordinates (Defaults to Nairobi)
+        var selectedLat by remember { mutableStateOf(-1.286389) }
+        var selectedLng by remember { mutableStateOf(36.817223) }
 
         Box(
             modifier = Modifier.fillMaxSize().background(MtaaCream)
         ) {
-            // 1. The "Fake" Map (Gray Placeholder)
-            Box(
+            // 1. THE REAL GOOGLE MAP
+            MtaaMap(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 250.dp) // Leave space for bottom sheet
-                    .background(Color(0xFFE5E7EB)), // Light Gray "Map" color
-                contentAlignment = Alignment.Center
-            ) {
-                // A fake "Map Pin" in the center
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = "Pin",
-                    tint = MtaaOrange,
-                    modifier = Modifier.size(64.dp)
-                )
-                Text(
-                    "(Map Loading...)",
-                    color = MtaaSlate.copy(alpha = 0.5f),
-                    modifier = Modifier.padding(top = 80.dp)
-                )
-            }
+                    .padding(bottom = 250.dp), // Space for bottom sheet
+                onLocationSelected = { lat, lng ->
+                    selectedLat = lat
+                    selectedLng = lng
+                    statusMessage = "Selected: $lat, $lng"
+                }
+            )
 
-            // 2. The Bottom Sheet (Premium Control Panel)
+            // 2. The Bottom Sheet
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -85,7 +75,6 @@ class LocationVerificationScreen : Screen {
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Title
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = if (isVerified) "Location Verified" else "Verify Location",
@@ -110,25 +99,15 @@ class LocationVerificationScreen : Screen {
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // 3. The Action Button
                     Button(
                         onClick = {
                             scope.launch {
                                 isVerifying = true
                                 statusMessage = "Checking GPS satellites..."
-                                delay(1500) // Fake loading
-                                statusMessage = "Calculating distance to building..."
-                                delay(1500)
-
-                                // MOCK SUCCESS
+                                delay(1500) // Simulating API call
                                 isVerifying = false
                                 isVerified = true
-                                statusMessage = "Success! You are at the correct location."// MOCK SUCCESS
-                                isVerifying = false
-                                isVerified = true
-                                statusMessage = "Success! You are at the correct location."
-
-                                // Wait 1 second then go to Dashboard
+                                statusMessage = "Success! Location Verified."
                                 delay(1000)
                                 navigator.push(SellerDashboardScreen())
                             }
@@ -142,8 +121,6 @@ class LocationVerificationScreen : Screen {
                     ) {
                         if (isVerifying) {
                             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Verifying GPS...")
                         } else {
                             Icon(Icons.Default.MyLocation, null)
                             Spacer(modifier = Modifier.width(8.dp))
