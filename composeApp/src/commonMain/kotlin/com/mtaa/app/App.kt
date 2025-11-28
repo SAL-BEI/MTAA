@@ -6,13 +6,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.SlideTransition
+import cafe.adriel.voyager.core.screen.Screen // Import Screen
+import cafe.adriel.voyager.navigator.CurrentScreen
 import com.mtaa.app.screens.WelcomeScreen
 import com.mtaa.app.theme.*
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
+// Add the 'startScreen' parameter with a default
 @Composable
-@Preview
-fun App() {
+fun App(startScreen: Screen = WelcomeScreen()) {
     MaterialTheme(
         colorScheme = lightColorScheme(
             primary = MtaaOrange,
@@ -21,9 +22,9 @@ fun App() {
             onSurface = MtaaSlate
         )
     ) {
-        // Start navigation at the Welcome Screen
-        Navigator(WelcomeScreen()) { navigator ->
-            SlideTransition(navigator)
+        // Use the passed startScreen instead of hardcoding WelcomeScreen
+        Navigator(startScreen) { navigator ->
+            CurrentScreen()
         }
     }
 }
