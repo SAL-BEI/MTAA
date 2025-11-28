@@ -7,7 +7,6 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinx.serialization)
-
 }
 
 kotlin {
@@ -16,7 +15,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -26,33 +25,45 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
-            implementation(libs.ktor.client.okhttp)
+            implementation(libs.ktor.client.okhttp) // This is the correct Ktor engine for Android
             implementation(libs.androidx.activity.compose)
+            implementation(libs.maps.compose)
         }
         commonMain.dependencies {
-
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+
             implementation(libs.ktor.client.core)
             implementation(libs.supabase.gotrue)
             implementation(libs.supabase.postgrest)
             implementation(libs.supabase.storage)
             implementation(libs.supabase.realtime)
+
             implementation(libs.voyager.navigator)
             implementation(libs.voyager.transitions)
+
             implementation(libs.filekit.compose)
             implementation(compose.materialIconsExtended)
             implementation(libs.multiplatform.settings)
+            implementation(libs.maps.compose)
+
+            // Corrected Coil dependencies
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin) // Ktor engine for iOS
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -90,4 +101,3 @@ android {
 dependencies {
     debugImplementation(compose.uiTooling)
 }
-
