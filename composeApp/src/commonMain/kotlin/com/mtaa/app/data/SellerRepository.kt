@@ -2,12 +2,10 @@ package com.mtaa.app.data
 
 import com.mtaa.app.MtaaSupabase
 import io.github.jan.supabase.postgrest.from
-import kotlinx.serialization.Serializable
-// CHANGE 1: "gotrue" is now "auth" in version 3.0.0
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.user.UserInfo
 import io.github.jan.supabase.storage.storage
 import io.github.jan.supabase.storage.upload
+import io.github.jan.supabase.auth.auth // <--- CRITICAL IMPORT
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class Business(
@@ -21,7 +19,7 @@ class SellerRepository {
 
     suspend fun createBusiness(name: String, kraPin: String): Boolean {
         return try {
-            // CHANGE 2: We need the 'auth' import above to make this work
+            // This requires the 'auth' import above
             val user = MtaaSupabase.client.auth.currentUserOrNull()
 
             if (user == null) {
@@ -44,19 +42,13 @@ class SellerRepository {
             false
         }
     }
-    // Function to upload a file (ByteArray) to Supabase Storage
+
     suspend fun uploadCertificate(fileName: String, fileData: ByteArray): Boolean {
         return try {
             val user = MtaaSupabase.client.auth.currentUserOrNull() ?: return false
-
-            // Create a unique path: user_id/filename
             val path = "${user.id}/$fileName"
-
             val bucket = MtaaSupabase.client.storage.from("documents")
-            bucket.upload(path, fileData) {
-                upsert = true // Overwrite if exists
-            }
-
+            bucket.upload(path, fileData) { upsert = true }
             println("Upload Success: $path")
             true
         } catch (e: Exception) {

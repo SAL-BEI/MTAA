@@ -2,11 +2,11 @@ package com.mtaa.app.data
 
 import com.mtaa.app.MtaaSupabase
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.storage.storage
 import io.github.jan.supabase.storage.upload
-import kotlinx.serialization.Serializable
-// Ensure you have the auth import for user ID
 import io.github.jan.supabase.auth.auth
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class Product(
@@ -21,19 +21,19 @@ data class Product(
 
 class ProductRepository {
 
-    // Get the user's business ID (Helper function)
+    // Helper: Get the user's business ID
     private suspend fun getMyBusinessId(userId: String): String? {
-        // This queries the DB to find the business owned by this user
         val result = MtaaSupabase.client.from("businesses")
             .select {
                 filter {
                     eq("owner_id", userId)
                 }
             }
-            .decodeSingleOrNull<Business>()
+            .decodeSingleOrNull<Business>() // Business class is in SellerRepository.kt (Same package)
         return result?.id
     }
-    // Fetch products for the logged-in user
+
+    // 1. Fetch products for the SELLER Dashboard (Only their own)
     suspend fun getMyProducts(): List<Product> {
         return try {
             val user = MtaaSupabase.client.auth.currentUserOrNull() ?: return emptyList()
@@ -48,6 +48,23 @@ class ProductRepository {
             emptyList()
         }
     }
+
+    // 2. Fetch ALL products for the BUYER Feed (Public)
+    suspend fun getAllProducts(): List<Product> {
+        return try {
+            MtaaSupabase.client.from("products")
+                .select {
+                    // Sort by newest first
+                    order("created_at", Order.DESCENDING)
+                }
+                .decodeList<Product>()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    // 3. Create a new product (Seller)
     suspend fun createProduct(name: String, desc: String, price: Double, imageBytes: ByteArray?): Boolean {
         return try {
             val user = MtaaSupabase.client.auth.currentUserOrNull() ?: return false
@@ -55,16 +72,13 @@ class ProductRepository {
 
             var finalImageUrl: String? = null
 
-            // 1. Upload Image if it exists
             if (imageBytes != null) {
                 val fileName = "${System.currentTimeMillis()}_${user.id}.jpg"
                 val bucket = MtaaSupabase.client.storage.from("products")
                 bucket.upload(fileName, imageBytes) { upsert = true }
-                // Get the Public URL so buyers can see it
                 finalImageUrl = bucket.publicUrl(fileName)
             }
 
-            // 2. Save Product to DB
             val newProduct = Product(
                 name = name,
                 description = desc,
@@ -75,6 +89,21 @@ class ProductRepository {
             )
 
             MtaaSupabase.client.from("products").insert(newProduct)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    // 4. Delete a product
+    suspend fun deleteProduct(productId: String): Boolean {
+        return try {
+            MtaaSupabase.client.from("products").delete {
+                filter {
+                    eq("id", productId)
+                }
+            }
             true
         } catch (e: Exception) {
             e.printStackTrace()
