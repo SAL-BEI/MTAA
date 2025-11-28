@@ -1,11 +1,12 @@
 package com.mtaa.app.data
 
 import com.mtaa.app.MtaaSupabase
+// CRITICAL IMPORTS START
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
-// NEW IMPORTS: These are required for database checks (from, count, eq)
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Count
+// CRITICAL IMPORTS END
 
 class AuthRepository {
 
@@ -15,7 +16,9 @@ class AuthRepository {
                 email = emailInput
                 password = passwordInput
             }
-            true // Success
+            // Check if we actually got a session
+            val session = MtaaSupabase.client.auth.currentSessionOrNull()
+            session != null
         } catch (e: Exception) {
             println("Sign Up Failed: ${e.message}")
             false
@@ -26,7 +29,6 @@ class AuthRepository {
     suspend fun hasBusiness(): Boolean {
         val user = MtaaSupabase.client.auth.currentUserOrNull() ?: return false
 
-        // Count rows in 'businesses' where owner_id == current user
         val count = MtaaSupabase.client.from("businesses").select {
             count(Count.EXACT)
             filter {
