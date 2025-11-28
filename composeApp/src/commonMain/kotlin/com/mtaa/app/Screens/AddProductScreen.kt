@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mtaa.app.data.ProductRepository
+import com.mtaa.app.data.ProductRepository // Required Import
 import com.mtaa.app.theme.*
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
@@ -31,7 +31,6 @@ import kotlinx.coroutines.launch
 
 class AddProductScreen : Screen {
 
-    // THIS ANNOTATION IS REQUIRED FOR TopAppBar
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
@@ -39,7 +38,6 @@ class AddProductScreen : Screen {
         val scope = rememberCoroutineScope()
         val repository = remember { ProductRepository() }
 
-        // Form State
         var name by remember { mutableStateOf("") }
         var price by remember { mutableStateOf("") }
         var description by remember { mutableStateOf("") }
@@ -47,7 +45,6 @@ class AddProductScreen : Screen {
         var imageBytes by remember { mutableStateOf<ByteArray?>(null) }
         var isLoading by remember { mutableStateOf(false) }
 
-        // Image Picker
         val launcher = rememberFilePickerLauncher(
             type = PickerType.Image,
             mode = PickerMode.Single,
@@ -60,7 +57,6 @@ class AddProductScreen : Screen {
                 }
             }
         }
-
 
         Scaffold(
             topBar = {
@@ -83,7 +79,6 @@ class AddProductScreen : Screen {
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                // 1. Image Upload Box
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -114,7 +109,6 @@ class AddProductScreen : Screen {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // 2. Inputs
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -153,7 +147,6 @@ class AddProductScreen : Screen {
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // 3. Submit Button
                 Button(
                     onClick = {
                         scope.launch {
@@ -166,7 +159,7 @@ class AddProductScreen : Screen {
                             )
                             isLoading = false
                             if (success) {
-                                navigator.pop() // Go back to Dashboard
+                                navigator.pop()
                             }
                         }
                     },
