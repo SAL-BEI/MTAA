@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete // Import Delete Icon
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,9 +22,12 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import coil3.compose.AsyncImage
+import com.mtaa.app.MtaaSupabase
 import com.mtaa.app.data.Product
 import com.mtaa.app.data.ProductRepository
 import com.mtaa.app.theme.*
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
 
 class SellerDashboardScreen : Screen {
@@ -33,14 +38,20 @@ class SellerDashboardScreen : Screen {
         val scope = rememberCoroutineScope()
         val repository = remember { ProductRepository() }
 
-        // State to hold our list of products
         var products by remember { mutableStateOf<List<Product>>(emptyList()) }
         var isLoading by remember { mutableStateOf(true) }
 
-        // 1. Fetch Data when screen opens
+        // Helper function to refresh list
+        fun refreshProducts() {
+            scope.launch {
+                isLoading = true
+                products = repository.getMyProducts()
+                isLoading = false
+            }
+        }
+
         LaunchedEffect(Unit) {
-            products = repository.getMyProducts()
-            isLoading = false
+            refreshProducts()
         }
 
         Scaffold(
@@ -49,15 +60,17 @@ class SellerDashboardScreen : Screen {
                     title = { Text("My Shop", fontWeight = FontWeight.Bold) },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MtaaCream),
                     actions = {
+                        IconButton(onClick = { refreshProducts() }) {
+                            Icon(Icons.Default.Refresh, "Refresh")
+                        }
+
                         IconButton(onClick = {
-                            // Refresh Button Logic
                             scope.launch {
-                                isLoading = true
-                                products = repository.getMyProducts()
-                                isLoading = false
+                                MtaaSupabase.client.auth.signOut()
+                                navigator.replaceAll(WelcomeScreen())
                             }
                         }) {
-                            Icon(Icons.Default.Refresh, "Refresh")
+                            Icon(Icons.Default.ExitToApp, "Logout")
                         }
                     }
                 )
@@ -84,7 +97,6 @@ class SellerDashboardScreen : Screen {
                         color = MtaaOrange
                     )
                 } else if (products.isEmpty()) {
-                    // Empty State
                     Column(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -93,15 +105,27 @@ class SellerDashboardScreen : Screen {
                         Text("Click + to add your first item.", color = MtaaSlate.copy(alpha = 0.6f))
                     }
                 } else {
-                    // 2. The Grid of Products
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(2), // 2 columns like a real mall app
+                        columns = GridCells.Fixed(2),
                         contentPadding = PaddingValues(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(products) { product ->
-                            ProductCard(product)
+                            ProductCard(
+                                product = product,
+                                onDelete = {
+                                    // Delete Logic
+                                    scope.launch {
+                                        if (product.id != null) {
+                                            val success = repository.deleteProduct(product.id)
+                                            if (success) {
+                                                refreshProducts() // Reload list if delete worked
+                                            }
+                                        }
+                                    }
+                                }
+                            )
                         }
                     }
                 }
@@ -110,36 +134,55 @@ class SellerDashboardScreen : Screen {
     }
 
     @Composable
-    fun ProductCard(product: Product) {
+    fun ProductCard(product: Product, onDelete: () -> Unit) {
         Card(
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             elevation = CardDefaults.cardElevation(2.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column {
-                // Placeholder for Image (We will add real image loading later)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp)
-                        .background(Color.LightGray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Image", color = Color.Gray)
+            // Use a Box so we can put the Delete button on top of the image
+            Box {
+                Column {
+                    AsyncImage(
+                        model = product.image_url,
+                        contentDescription = product.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .background(Color.LightGray),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = product.name,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            color = MtaaSlate
+                        )
+                        Text(
+                            text = "KES ${product.price}",
+                            color = MtaaOrange,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
 
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(
-                        text = product.name,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        color = MtaaSlate
-                    )
-                    Text(
-                        text = "KES ${product.price}",
-                        color = MtaaOrange,
-                        fontWeight = FontWeight.Medium
+                // DELETE BUTTON (Top Right)
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(4.dp)
+                        .background(Color.White.copy(alpha = 0.7f), androidx.compose.foundation.shape.CircleShape)
+                        .size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = Color.Red,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }

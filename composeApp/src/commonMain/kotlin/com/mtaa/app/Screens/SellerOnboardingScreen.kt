@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
+import cafe.adriel.voyager.navigator.currentOrThrow // <--- CRITICAL IMPORT
 import com.mtaa.app.data.SellerRepository
 import com.mtaa.app.theme.*
 import kotlinx.coroutines.launch
@@ -25,60 +25,34 @@ class SellerOnboardingScreen : Screen {
         val scope = rememberCoroutineScope()
         val repository = remember { SellerRepository() }
 
-        // Form State (Holds what the user types)
         var businessName by remember { mutableStateOf("") }
         var kraPin by remember { mutableStateOf("") }
         var isLoading by remember { mutableStateOf(false) }
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MtaaCream)
-                .padding(24.dp)
+            modifier = Modifier.fillMaxSize().background(MtaaCream).padding(24.dp)
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // 1. Progress Bar (Step 1 of 4)
+            Column(modifier = Modifier.fillMaxWidth()) {
                 LinearProgressIndicator(
-                    progress = { 0.25f }, // 25% complete
+                    progress = { 0.25f },
                     modifier = Modifier.fillMaxWidth().height(8.dp),
                     color = MtaaOrange,
                     trackColor = MtaaOrangeDim,
                 )
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Text("Tell us about your business", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = MtaaSlate))
+                Text("We verify every business to ensure trust.", style = MaterialTheme.typography.bodyMedium.copy(color = MtaaSlate.copy(alpha = 0.7f)))
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // 2. Headline
-                Text(
-                    text = "Tell us about your business",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MtaaSlate
-                    )
-                )
-
-                Text(
-                    text = "We verify every business to ensure trust.",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MtaaSlate.copy(alpha = 0.7f)
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // 3. Input Fields
                 OutlinedTextField(
                     value = businessName,
                     onValueChange = { businessName = it },
                     label = { Text("Business Name") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MtaaOrange,
-                        focusedLabelColor = MtaaOrange,
-                        cursorColor = MtaaOrange
-                    )
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MtaaOrange, focusedLabelColor = MtaaOrange, cursorColor = MtaaOrange)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -89,30 +63,23 @@ class SellerOnboardingScreen : Screen {
                     label = { Text("KRA PIN (e.g., P05...)") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MtaaOrange,
-                        focusedLabelColor = MtaaOrange,
-                        cursorColor = MtaaOrange
-                    )
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MtaaOrange, focusedLabelColor = MtaaOrange, cursorColor = MtaaOrange)
                 )
             }
 
-            // 4. Next Button (Sticks to bottom)
             Button(
                 onClick = {
-                    scope.launch {val success = repository.createBusiness(businessName, kraPin)
+                    scope.launch {
+                        isLoading = true
+                        val success = repository.createBusiness(businessName, kraPin)
                         isLoading = false
-
                         if (success) {
                             navigator.push(DocumentUploadScreen())
                         }
                     }
                 },
                 enabled = businessName.isNotEmpty() && kraPin.isNotEmpty() && !isLoading,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MtaaOrange),
                 shape = RoundedCornerShape(16.dp)
             ) {

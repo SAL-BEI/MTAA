@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -17,37 +15,16 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mtaa.app.MtaaSupabase
-import com.mtaa.app.data.AuthRepository
 import com.mtaa.app.theme.*
-import io.github.jan.supabase.auth.auth
-import kotlinx.coroutines.delay // Required for the crash fix
 
 class WelcomeScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val authRepo = remember { AuthRepository() }
 
-        // 1. AUTO-LOGIN LOGIC
-        LaunchedEffect(Unit) {
-            // FIX 1: Add a tiny delay to ensure the screen is ready (Prevent 'DESTROYED' crash)
-            delay(100)
+        // NOTE: Auto-Login logic has been moved to MainActivity.kt to prevent crashes.
+        // This screen now only shows buttons.
 
-            val session = MtaaSupabase.client.auth.currentSessionOrNull()
-            if (session != null) {
-                val hasShop = authRepo.hasBusiness()
-
-                // FIX 2: Use replaceAll to clear history so they can't go back to Welcome
-                if (hasShop) {
-                    navigator.replaceAll(SellerDashboardScreen())
-                } else {
-                    navigator.replaceAll(SellerOnboardingScreen())
-                }
-            }
-        }
-
-        // 2. The UI
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -75,13 +52,13 @@ class WelcomeScreen : Screen {
             ) {
                 // Logo
                 Surface(
-                    modifier = Modifier.size(80.dp),
-                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.size(100.dp),
+                    shape = RoundedCornerShape(28.dp),
                     color = MtaaOrange,
-                    shadowElevation = 12.dp
+                    shadowElevation = 16.dp
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text("M", color = Color.White, fontSize = 40.sp, fontWeight = FontWeight.Bold)
+                        Text("M", color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -108,11 +85,9 @@ class WelcomeScreen : Screen {
 
                 Spacer(modifier = Modifier.height(48.dp))
 
-                // Sign Up Button
+                // 1. Sign Up Button
                 Button(
-                    onClick = {
-                        navigator.push(SignUpScreen())
-                    },
+                    onClick = { navigator.push(SignUpScreen()) },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MtaaOrange),
                     shape = RoundedCornerShape(16.dp),
@@ -123,13 +98,26 @@ class WelcomeScreen : Screen {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Login Button
+                // 2. Login Button
                 TextButton(
-                    onClick = {
-                        navigator.push(LoginScreen())
-                    }
+                    onClick = { navigator.push(LoginScreen()) }
                 ) {
                     Text("I already have an account", color = MtaaSlate)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 3. Buyer Button
+                OutlinedButton(
+                    onClick = {
+                        // Push adds to stack safely so "Back" works
+                        navigator.push(BuyerHomeScreen())
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MtaaOrange)
+                ) {
+                    Text("Just Browsing?", color = MtaaOrange, fontWeight = FontWeight.Bold)
                 }
             }
         }
