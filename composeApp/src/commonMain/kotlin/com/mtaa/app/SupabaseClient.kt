@@ -6,10 +6,12 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.auth.SessionManager
-import io.github.jan.supabase.auth.user.UserSession // Import this!
+import io.github.jan.supabase.auth.user.UserSession
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.realtime.Realtime
+import io.github.jan.supabase.serializer.KotlinXSerializer // Import required for JSON fix
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -30,7 +32,6 @@ object MtaaSupabase {
                 scheme = "app"
                 host = "supabase.com"
 
-                // FIXED: Correctly handles UserSession object by converting to JSON string
                 sessionManager = object : SessionManager {
                     override suspend fun saveSession(session: UserSession) {
                         val sessionString = Json.encodeToString(session)
@@ -54,6 +55,14 @@ object MtaaSupabase {
             install(Postgrest)
             install(Storage)
             install(Realtime)
+
+            // FIXED: Explicitly configure the Serializer for Functions to handle JSON bodies
+            install(Functions) {
+                serializer = KotlinXSerializer(Json {
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
         }
     }
 }

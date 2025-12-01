@@ -58,6 +58,8 @@ kotlin {
             implementation(libs.multiplatform.settings)
             implementation(libs.maps.compose)
 
+            implementation("io.github.jan-tennert.supabase:functions-kt:3.0.0")
+
             // Corrected Coil dependencies
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)

@@ -31,6 +31,7 @@ import com.mtaa.app.data.ProductRepository
 import com.mtaa.app.theme.*
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
+// REMOVED BAD IMPORT: import com.mtaa.app.Screens.ProductDetailScreen
 
 class BuyerHomeScreen : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
