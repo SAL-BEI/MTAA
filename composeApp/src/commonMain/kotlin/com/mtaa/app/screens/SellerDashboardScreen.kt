@@ -7,8 +7,9 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete // Import Delete Icon
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -18,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -41,9 +41,13 @@ class SellerDashboardScreen : Screen {
         var products by remember { mutableStateOf<List<Product>>(emptyList()) }
         var isLoading by remember { mutableStateOf(true) }
 
-        // Helper function to refresh list
         fun refreshProducts() {
             scope.launch {
+                val user = MtaaSupabase.client.auth.currentUserOrNull()
+                if (user == null) {
+                    navigator.replaceAll(LoginScreen())
+                    return@launch
+                }
                 isLoading = true
                 products = repository.getMyProducts()
                 isLoading = false
@@ -59,14 +63,22 @@ class SellerDashboardScreen : Screen {
                 TopAppBar(
                     title = { Text("My Shop", fontWeight = FontWeight.Bold) },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MtaaCream),
+                    navigationIcon = {
+                        // FIX: Explicitly go to BuyerHomeScreen instead of just "popping"
+                        IconButton(onClick = {
+                            navigator.replaceAll(BuyerHomeScreen())
+                        }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back to Home")
+                        }
+                    },
                     actions = {
                         IconButton(onClick = { refreshProducts() }) {
                             Icon(Icons.Default.Refresh, "Refresh")
                         }
-
                         IconButton(onClick = {
                             scope.launch {
                                 MtaaSupabase.client.auth.signOut()
+                                // FIX: Go to Welcome Screen on Logout
                                 navigator.replaceAll(WelcomeScreen())
                             }
                         }) {
@@ -115,12 +127,11 @@ class SellerDashboardScreen : Screen {
                             ProductCard(
                                 product = product,
                                 onDelete = {
-                                    // Delete Logic
                                     scope.launch {
                                         if (product.id != null) {
                                             val success = repository.deleteProduct(product.id)
                                             if (success) {
-                                                refreshProducts() // Reload list if delete worked
+                                                refreshProducts()
                                             }
                                         }
                                     }
@@ -141,7 +152,6 @@ class SellerDashboardScreen : Screen {
             elevation = CardDefaults.cardElevation(2.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Use a Box so we can put the Delete button on top of the image
             Box {
                 Column {
                     AsyncImage(
@@ -169,7 +179,6 @@ class SellerDashboardScreen : Screen {
                     }
                 }
 
-                // DELETE BUTTON (Top Right)
                 IconButton(
                     onClick = onDelete,
                     modifier = Modifier
