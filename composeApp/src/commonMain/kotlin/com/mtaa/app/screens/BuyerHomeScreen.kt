@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.List // <--- NEW IMPORT
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,7 +32,6 @@ import com.mtaa.app.data.ProductRepository
 import com.mtaa.app.theme.*
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
-// REMOVED BAD IMPORT: import com.mtaa.app.Screens.ProductDetailScreen
 
 class BuyerHomeScreen : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -63,6 +63,13 @@ class BuyerHomeScreen : Screen {
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MtaaCream),
                     actions = {
+                        // --- NEW: My Orders Button ---
+                        IconButton(onClick = {
+                            navigator.push(BuyerOrdersScreen())
+                        }) {
+                            Icon(Icons.Default.List, "My Orders", tint = MtaaOrange)
+                        }
+
                         // Button to switch to Seller Mode
                         TextButton(onClick = {
                             scope.launch {

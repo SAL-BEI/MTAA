@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.List // <--- NEW IMPORT
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -64,7 +65,6 @@ class SellerDashboardScreen : Screen {
                     title = { Text("My Shop", fontWeight = FontWeight.Bold) },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MtaaCream),
                     navigationIcon = {
-                        // FIX: Explicitly go to BuyerHomeScreen instead of just "popping"
                         IconButton(onClick = {
                             navigator.replaceAll(BuyerHomeScreen())
                         }) {
@@ -72,13 +72,20 @@ class SellerDashboardScreen : Screen {
                         }
                     },
                     actions = {
+                        // --- NEW: Orders Button ---
+                        // This takes the seller to view incoming sales
+                        IconButton(onClick = {
+                            navigator.push(SellerOrdersScreen())
+                        }) {
+                            Icon(Icons.Default.List, "View Orders")
+                        }
+
                         IconButton(onClick = { refreshProducts() }) {
                             Icon(Icons.Default.Refresh, "Refresh")
                         }
                         IconButton(onClick = {
                             scope.launch {
                                 MtaaSupabase.client.auth.signOut()
-                                // FIX: Go to Welcome Screen on Logout
                                 navigator.replaceAll(WelcomeScreen())
                             }
                         }) {

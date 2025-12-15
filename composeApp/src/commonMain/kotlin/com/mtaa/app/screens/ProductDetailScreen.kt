@@ -27,11 +27,13 @@ import com.mtaa.app.MtaaSupabase
 import com.mtaa.app.data.CartRepository
 import com.mtaa.app.data.Product
 
-// --- SUPABASE IMPORTS (FIXED) ---
+// --- SUPABASE IMPORTS ---
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
-// FIX: Use wildcard (*) import. This fixes "Unresolved reference: invoke"
-import io.github.jan.supabase.functions.* import io.ktor.utils.io.InternalAPI
+import io.github.jan.supabase.functions.*
+import io.github.jan.supabase.realtime.* import io.ktor.utils.io.InternalAPI
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -75,7 +77,6 @@ data class ProductDetailScreen(val product: Product) : Screen {
 
         var isProcessing by remember { mutableStateOf(false) }
 
-        // Check if item is already in cart
         var isAddedToCart by remember {
             mutableStateOf(product.id?.let { CartRepository.isInCart(it) } ?: false)
         }
@@ -152,6 +153,7 @@ data class ProductDetailScreen(val product: Product) : Screen {
                                             val user = MtaaSupabase.client.auth.currentUserOrNull()
                                             if (user == null) {
                                                 snackbarHostState.showSnackbar("Please login to buy")
+                                                isProcessing = false
                                                 return@launch
                                             }
 
@@ -171,8 +173,41 @@ data class ProductDetailScreen(val product: Product) : Screen {
 
                                             val orderId = createdOrder.id ?: throw Exception("Failed to create order")
 
+                                            // --- FIX: Correct Realtime Syntax ---
+                                            // 1. Create the channel
+                                            val channel = MtaaSupabase.client.channel("order-$orderId")
+
+                                            // 2. Create the flow using the LAMBDA syntax (Curly braces)
+                                            // We removed the 'filter' property to avoid the "private" error.
+                                            val changeFlow = channel.postgresChangeFlow<PostgresAction.Update>(schema = "public") {
+                                                table = "orders"
+                                            }
+
+                                            // 3. Launch Listener
+                                            scope.launch {
+                                                channel.subscribe()
+                                                changeFlow.collect { change ->
+                                                    val updatedOrder = change.decodeRecord<Order>()
+
+                                                    // 4. MANUAL FILTER: Check the ID here instead!
+                                                    if (updatedOrder.id == orderId) {
+                                                        if (updatedOrder.status == "escrow_locked") {
+                                                            snackbarHostState.showSnackbar("Payment Received! ✅")
+                                                            isProcessing = false
+                                                            channel.unsubscribe()
+                                                            this.cancel()
+                                                        } else if (updatedOrder.status == "cancelled") {
+                                                            snackbarHostState.showSnackbar("Payment Cancelled ❌")
+                                                            isProcessing = false
+                                                            channel.unsubscribe()
+                                                            this.cancel()
+                                                        }
+                                                    }
+                                                }
+                                            }
+
                                             // C. Trigger M-PESA
-                                            val myTestPhone = "254724894722"
+                                            val myTestPhone = "254724894722" // Replace later
 
                                             val paymentRequest = PaymentRequest(
                                                 phoneNumber = myTestPhone,
@@ -180,8 +215,6 @@ data class ProductDetailScreen(val product: Product) : Screen {
                                                 orderId = orderId
                                             )
 
-                                            // --- EXECUTION BLOCK ---
-                                            // The import `io.github.jan.supabase.functions.*` makes this work.
                                             MtaaSupabase.client.functions.invoke(
                                                 function = "mpesa-push",
                                                 body = Json.encodeToJsonElement(paymentRequest)
@@ -192,7 +225,6 @@ data class ProductDetailScreen(val product: Product) : Screen {
                                         } catch (e: Exception) {
                                             e.printStackTrace()
                                             snackbarHostState.showSnackbar("Error: ${e.message}")
-                                        } finally {
                                             isProcessing = false
                                         }
                                     }
