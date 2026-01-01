@@ -1,123 +1,159 @@
 package com.mtaa.app.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mtaa.app.theme.*
+import com.mtaa.app.theme.* // Ensure your theme colors are imported
+import org.jetbrains.compose.resources.painterResource
+import mtaamarket.composeapp.generated.resources.Res
+import mtaamarket.composeapp.generated.resources.mtaa_logo
+import mtaamarket.composeapp.generated.resources.nairobi_bg // This will appear after you Build
 
 class WelcomeScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
 
-        // NOTE: Auto-Login logic has been moved to MainActivity.kt to prevent crashes.
-        // This screen now only shows buttons.
+        Box(modifier = Modifier.fillMaxSize()) {
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MtaaCream)
-        ) {
-            // Background Decoration
+            // --- LAYER 1: The Cinematic Background ---
+            Image(
+                painter = painterResource(Res.drawable.nairobi_bg),
+                contentDescription = "Background",
+                contentScale = ContentScale.Crop, // This makes it fill the screen
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // --- LAYER 2: The "Readability" Gradient ---
+            // This darkens the image from bottom (heavy) to top (light)
+            // so the white text pops without hiding the photo completely.
             Box(
                 modifier = Modifier
-                    .offset(x = (-100).dp, y = (-100).dp)
-                    .size(300.dp)
+                    .fillMaxSize()
                     .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(MtaaOrangeDim.copy(alpha = 0.3f), Color.Transparent)
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Black.copy(alpha = 0.1f), // Top: Mostly clear
+                                Color.Black.copy(alpha = 0.6f), // Middle: Darker
+                                Color.Black.copy(alpha = 0.95f) // Bottom: Almost black
+                            ),
+                            startY = 0f,
+                            endY = Float.POSITIVE_INFINITY
                         )
                     )
             )
 
-            // Main Content
+            // --- LAYER 3: The Content ---
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.Center,
+                    .padding(horizontal = 24.dp, vertical = 48.dp),
+                verticalArrangement = Arrangement.Bottom, // Anchors UI to the thumb zone
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Logo
-                Surface(
-                    modifier = Modifier.size(100.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    color = MtaaOrange,
-                    shadowElevation = 16.dp
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text("M", color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
 
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Text(
-                    text = "Mtaa Market",
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MtaaSlate,
-                        letterSpacing = (-1).sp
-                    )
+                // Logo Area: Clean and distinct
+                // We use a white tint to make it look like a premium brand mark
+                Image(
+                    painter = painterResource(Res.drawable.mtaa_logo),
+                    contentDescription = "MtaaMarket Brand",
+                    modifier = Modifier.size(80.dp),
+                    colorFilter = ColorFilter.tint(Color.White)
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
+                // Headline: Bold and Direct
                 Text(
-                    text = "Trusted local shopping in Nairobi's top buildings.",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        color = MtaaSlate.copy(alpha = 0.7f)
+                    text = "Welcome to your\nMtaa Market",
+                    style = MaterialTheme.typography.displayMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        letterSpacing = (-0.5).sp,
+                        lineHeight = 44.sp
                     ),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Subtitle: Trust-building language
+                Text(
+                    text = "The secure way to buy and sell within your building community.",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 16.sp
+                    ),
+                    textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(48.dp))
 
-                // 1. Sign Up Button
+                // --- PRIMARY ACTION: List Business ---
+                // Solid Orange button for the main goal
                 Button(
                     onClick = { navigator.push(SignUpScreen()) },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MtaaOrange),
                     shape = RoundedCornerShape(16.dp),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
                 ) {
-                    Text("List My Business", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        "List My Business",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 2. Login Button
-                TextButton(
-                    onClick = { navigator.push(LoginScreen()) }
-                ) {
-                    Text("I already have an account", color = MtaaSlate)
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 3. Buyer Button
+                // --- SECONDARY ACTION: Browse ---
+                // Transparent background with white border (Premium feel)
                 OutlinedButton(
-                    onClick = {
-                        // Push adds to stack safely so "Back" works
-                        navigator.push(BuyerHomeScreen())
-                    },
+                    onClick = { navigator.push(BuyerHomeScreen()) },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MtaaOrange)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color.White.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text("Just Browsing?", color = MtaaOrange, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Just Browsing",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Footer Link
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Already a member?", color = Color.White.copy(alpha = 0.7f))
+                    TextButton(onClick = { navigator.push(LoginScreen()) }) {
+                        Text(
+                            "Log In",
+                            color = MtaaOrange,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
