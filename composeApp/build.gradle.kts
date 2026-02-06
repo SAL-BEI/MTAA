@@ -32,6 +32,7 @@ kotlin {
             implementation(libs.ktor.client.okhttp) // This is the correct Ktor engine for Android
             implementation(libs.androidx.activity.compose)
             implementation(libs.maps.compose)
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -43,6 +44,8 @@ kotlin {
 
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation("io.github.onseok:peekaboo-ui:0.5.2")
+            implementation("io.github.onseok:peekaboo-image-picker:0.5.2")
 
             implementation(libs.ktor.client.core)
             implementation(libs.supabase.gotrue)
@@ -63,6 +66,7 @@ kotlin {
             // Corrected Coil dependencies
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
+
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin) // Ktor engine for iOS
