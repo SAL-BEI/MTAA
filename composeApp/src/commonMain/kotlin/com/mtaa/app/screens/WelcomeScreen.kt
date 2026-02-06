@@ -2,14 +2,12 @@ package com.mtaa.app.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -21,11 +19,11 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mtaa.app.theme.* // Ensure your theme colors are imported
+import com.mtaa.app.theme.*
 import org.jetbrains.compose.resources.painterResource
 import mtaamarket.composeapp.generated.resources.Res
 import mtaamarket.composeapp.generated.resources.mtaa_logo
-import mtaamarket.composeapp.generated.resources.nairobi_bg // This will appear after you Build
+import mtaamarket.composeapp.generated.resources.nairobi_bg
 
 class WelcomeScreen : Screen {
     @Composable
@@ -38,22 +36,20 @@ class WelcomeScreen : Screen {
             Image(
                 painter = painterResource(Res.drawable.nairobi_bg),
                 contentDescription = "Background",
-                contentScale = ContentScale.Crop, // This makes it fill the screen
+                contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
 
             // --- LAYER 2: The "Readability" Gradient ---
-            // This darkens the image from bottom (heavy) to top (light)
-            // so the white text pops without hiding the photo completely.
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                Color.Black.copy(alpha = 0.1f), // Top: Mostly clear
-                                Color.Black.copy(alpha = 0.6f), // Middle: Darker
-                                Color.Black.copy(alpha = 0.95f) // Bottom: Almost black
+                                Color.Black.copy(alpha = 0.1f),
+                                Color.Black.copy(alpha = 0.6f),
+                                Color.Black.copy(alpha = 0.95f)
                             ),
                             startY = 0f,
                             endY = Float.POSITIVE_INFINITY
@@ -66,12 +62,11 @@ class WelcomeScreen : Screen {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 24.dp, vertical = 48.dp),
-                verticalArrangement = Arrangement.Bottom, // Anchors UI to the thumb zone
+                verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // Logo Area: Clean and distinct
-                // We use a white tint to make it look like a premium brand mark
+                // Logo Area
                 Image(
                     painter = painterResource(Res.drawable.mtaa_logo),
                     contentDescription = "MtaaMarket Brand",
@@ -81,7 +76,7 @@ class WelcomeScreen : Screen {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Headline: Bold and Direct
+                // Headline
                 Text(
                     text = "Welcome to your\nMtaa Market",
                     style = MaterialTheme.typography.displayMedium.copy(
@@ -95,7 +90,7 @@ class WelcomeScreen : Screen {
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Subtitle: Trust-building language
+                // Subtitle
                 Text(
                     text = "The secure way to buy and sell within your building community.",
                     style = MaterialTheme.typography.bodyLarge.copy(
@@ -107,17 +102,19 @@ class WelcomeScreen : Screen {
 
                 Spacer(modifier = Modifier.height(48.dp))
 
-                // --- PRIMARY ACTION: List Business ---
-                // Solid Orange button for the main goal
+                // --- PRIMARY ACTION: Sign Up ---
                 Button(
-                    onClick = { navigator.push(SignUpScreen()) },
+                    onClick = {
+                        // ✅ FIXED: Navigate to SignUpScreen first
+                        navigator.push(SignUpScreen())
+                    },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MtaaOrange),
                     shape = RoundedCornerShape(16.dp),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
                 ) {
                     Text(
-                        "List My Business",
+                        "Sign Up",
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -126,8 +123,7 @@ class WelcomeScreen : Screen {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- SECONDARY ACTION: Browse ---
-                // Transparent background with white border (Premium feel)
+                // --- SECONDARY ACTION: Just Browsing ---
                 OutlinedButton(
                     onClick = { navigator.push(BuyerHomeScreen()) },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -144,12 +140,12 @@ class WelcomeScreen : Screen {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Footer Link
+                // --- Footer: Login Link ---
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Already a member?", color = Color.White.copy(alpha = 0.7f))
+                    Text("Already have an account?", color = Color.White.copy(alpha = 0.7f))
                     TextButton(onClick = { navigator.push(LoginScreen()) }) {
                         Text(
-                            "Log In",
+                            "Login",
                             color = MtaaOrange,
                             fontWeight = FontWeight.Bold
                         )

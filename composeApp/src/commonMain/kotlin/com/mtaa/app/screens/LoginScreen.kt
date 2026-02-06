@@ -25,7 +25,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mtaa.app.data.AuthRepository
 import com.mtaa.app.theme.*
 import kotlinx.coroutines.launch
-
+import com.mtaa.app.screens.SignUpScreen
 class LoginScreen : Screen {
     @Composable
     override fun Content() {
